@@ -34,6 +34,7 @@ func newRootCmd() *cobra.Command {
 	rootCmd.SetOut(os.Stdout)
 
 	rootCmd.AddCommand(cmd.NewJSONCmd())
+	rootCmd.AddCommand(cmd.NewConvertCmd())
 	return rootCmd
 }
 

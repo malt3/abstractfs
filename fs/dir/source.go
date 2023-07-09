@@ -14,28 +14,6 @@ import (
 	"github.com/malt3/abstractfs/fs/generic"
 )
 
-type Options struct {
-	SRIAlgorithm sri.Algorithm
-	// KeepPrefix will keep the prefix of the dir.
-	// If set, the dir path prefix will be removed from the node path.
-	// If not set, the node path will be the real path of the node.
-	// For example, if the node has the real path /foo/bar and the dir is /foo,
-	// the node path will be /foo/bar if KeepPrefix is set and /bar if not.
-	KeepPrefix bool
-}
-
-func NewDefaultOptions() Options {
-	opts := Options{}
-	opts.applyDefaults()
-	return opts
-}
-
-func (o *Options) applyDefaults() {
-	if o.SRIAlgorithm == "" {
-		o.SRIAlgorithm = sri.SHA256
-	}
-}
-
 type Source struct {
 	wg           sync.WaitGroup
 	dir          string
@@ -44,27 +22,6 @@ type Source struct {
 	keepPrefix   bool
 	nodes        chan next
 	stop         chan struct{}
-}
-
-func NewSource(dir string, opts Options) (api.Source, closeWaitFunc) {
-	if strings.HasSuffix(dir, "/") {
-		dir = dir[:len(dir)-1]
-	}
-	opts.applyDefaults()
-	source := &Source{
-		dir:          dir,
-		casStore:     generic.NewCASStore(),
-		sriAlgorithm: opts.SRIAlgorithm,
-		keepPrefix:   opts.KeepPrefix,
-		nodes:        make(chan next),
-		stop:         make(chan struct{}, 1),
-	}
-	source.wg.Add(1)
-	go source.walk()
-	return source, func() {
-		source.stop <- struct{}{}
-		source.wg.Wait()
-	}
 }
 
 func (s *Source) Next() (api.SourceNode, error) {

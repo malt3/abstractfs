@@ -11,35 +11,6 @@ import (
 	"github.com/malt3/abstractfs-core/sri"
 )
 
-type Options struct {
-	SRIAlgorithm sri.Algorithm
-	NewReader    func(io.Reader) Reader
-	// XAttrPaxPrefixes is a list of prefixes that are used to identify xattrs
-	// later prefixes override earlier ones if the same xattr is set multiple times.
-	XAttrPaxPrefixes []string
-}
-
-func NewDefaultOptions() Options {
-	opts := Options{}
-	opts.applyDefaults()
-	return opts
-}
-
-func (o *Options) applyDefaults() {
-	if o.SRIAlgorithm == "" {
-		o.SRIAlgorithm = sri.SHA256
-	}
-	if o.NewReader == nil {
-		o.NewReader = newDefaultReader
-	}
-	if o.XAttrPaxPrefixes == nil {
-		o.XAttrPaxPrefixes = []string{"SCHILY.xattr."}
-		// TODO: support libarchive xattrs
-		// They are encoded as urlencode(key), base64_encode(value)
-		// o.XAttrPaxPrefixes = []string{"LIBARCHIVE.xattr.", "SCHILY.xattr."}
-	}
-}
-
 type Source struct {
 	reader           Reader
 	sriAlgorithm     sri.Algorithm
@@ -51,16 +22,6 @@ type Source struct {
 	// alternatively, seek to the offset and read the file if ReaderAt is not available.
 	// The second option is must be guarded by a mutex since multiple goroutines might
 	// request CAS objects at the same time and seek around.
-}
-
-func NewSource(r io.Reader, opts Options) (api.Source, closeWaitFunc) {
-	opts.applyDefaults()
-	source := &Source{
-		reader:           opts.NewReader(r),
-		sriAlgorithm:     opts.SRIAlgorithm,
-		xattrPaxPrefixes: opts.XAttrPaxPrefixes,
-	}
-	return source, func() {}
 }
 
 func (s *Source) Next() (api.SourceNode, error) {
@@ -132,9 +93,10 @@ func (s *Source) nodeAttributes(header *archivetar.Header) api.NodeAttributes {
 	// including libarchive xattrs
 	for _, xattrPaxPrefix := range s.xattrPaxPrefixes {
 		for key, value := range header.PAXRecords {
-			if strings.HasSuffix(value, "\x00") {
-				value = value[:len(value)-1]
-			}
+			// TODO: find out if null bytes should be preserved
+			// if strings.HasSuffix(value, "\x00") {
+			// 	value = value[:len(value)-1]
+			// }
 			if strings.HasPrefix(key, xattrPaxPrefix) {
 				key = strings.TrimPrefix(key, xattrPaxPrefix)
 				xattrs[key] = value
@@ -152,8 +114,6 @@ func (s *Source) nodeAttributes(header *archivetar.Header) api.NodeAttributes {
 	}
 
 }
-
-type closeWaitFunc func()
 
 func newDefaultReader(r io.Reader) Reader {
 	return archivetar.NewReader(r)

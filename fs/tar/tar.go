@@ -5,21 +5,45 @@ import (
 	"io"
 
 	"github.com/malt3/abstractfs-core/api"
+	"github.com/malt3/abstractfs-core/provider"
 )
 
-type ReadFS struct {
-	reader io.Reader
+type Provider struct{}
+
+func (p Provider) Name() string {
+	return "dir"
 }
 
-func NewReadFS(reader io.Reader) *ReadFS {
-	return &ReadFS{reader: reader}
+func (p Provider) SourceBuilder() provider.SourceBuilder {
+	return &SourceBuilder{}
 }
 
-func (f *ReadFS) Source(opts Options) (api.Source, closeWaitFunc) {
-	return NewSource(f.reader, opts)
+func (p Provider) SinkBuilder() provider.SinkBuilder {
+	return &SinkBuilder{}
 }
+
+func (p Provider) CAS() (api.CAS, api.CloseWaitFunc, error) {
+	return nil, nil, provider.ErrUnsupported
+}
+
+func (p Provider) CASReader() (api.CASReader, api.CloseWaitFunc, error) {
+	return nil, nil, provider.ErrUnsupported
+}
+
+func (p Provider) CASWriter() (api.CASWriter, api.CloseWaitFunc, error) {
+	return nil, nil, provider.ErrUnsupported
+}
+
+var _ provider.Provider = (*Provider)(nil)
 
 type Reader interface {
 	Next() (*archivetar.Header, error)
 	io.Reader
+}
+
+type Writer interface {
+	Close() error
+	Flush() error
+	WriteHeader(hdr *archivetar.Header) error
+	io.Writer
 }

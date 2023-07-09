@@ -1,19 +1,34 @@
 package generic
 
 import (
-	iofs "io/fs"
-
 	"github.com/malt3/abstractfs-core/api"
+	"github.com/malt3/abstractfs-core/provider"
 )
 
-type FS struct {
-	inner iofs.FS
+type Provider struct{}
+
+func (p Provider) Name() string {
+	return "generic"
 }
 
-func New(inner iofs.FS) *FS {
-	return &FS{inner: inner}
+func (p Provider) SourceBuilder() provider.SourceBuilder {
+	return &SourceBuilder{}
 }
 
-func (f *FS) Source(opts Options) (api.Source, closeWaitFunc) {
-	return NewSource(f.inner, opts)
+func (p Provider) SinkBuilder() provider.SinkBuilder {
+	return &provider.UnsupportedSinkBuilder{}
 }
+
+func (p Provider) CAS() (api.CAS, api.CloseWaitFunc, error) {
+	return nil, nil, provider.ErrUnsupported
+}
+
+func (p Provider) CASReader() (api.CASReader, api.CloseWaitFunc, error) {
+	return nil, nil, provider.ErrUnsupported
+}
+
+func (p Provider) CASWriter() (api.CASWriter, api.CloseWaitFunc, error) {
+	return nil, nil, provider.ErrUnsupported
+}
+
+var _ provider.Provider = (*Provider)(nil)

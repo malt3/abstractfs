@@ -2,14 +2,10 @@ package cmd
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 
-	"github.com/malt3/abstractfs-core/api"
 	coretree "github.com/malt3/abstractfs-core/tree"
-	"github.com/malt3/abstractfs/fs/dir"
-	"github.com/malt3/abstractfs/fs/tar"
 	"github.com/spf13/cobra"
 )
 
@@ -64,27 +60,6 @@ func runJSON(cmd *cobra.Command, args []string) error {
 		out = outF
 	}
 	return json.NewEncoder(out).Encode(flat.Files)
-}
-
-func getSource(source, sourceType string) (api.Source, func(), error) {
-	switch sourceType {
-	case "dir":
-		source, closer := dir.New(source).Source(dir.Options{})
-		return source, closer, nil
-	case "tar":
-		sourceFile, err := os.Open(source)
-		if err != nil {
-			return nil, nil, fmt.Errorf("json: opening tar file: %w", err)
-		}
-		source, closer := tar.NewReadFS(sourceFile).Source(tar.Options{})
-		return source,
-			func() {
-				closer()
-				sourceFile.Close()
-			},
-			nil
-	}
-	return nil, nil, errors.New("unsupported source")
 }
 
 type jsonFlags struct {

@@ -3,7 +3,6 @@ package generic
 import (
 	"errors"
 	"io"
-	"io/fs"
 	iofs "io/fs"
 	"strconv"
 	"strings"
@@ -14,30 +13,6 @@ import (
 	"github.com/malt3/abstractfs-core/sri"
 )
 
-type Options struct {
-	SRIAlgorithm   sri.Algorithm
-	NodeAttributes func(iofs.FileInfo) api.NodeAttributes
-	StripPrefix    string
-}
-
-func NewDefaultOptions() Options {
-	opts := Options{}
-	opts.applyDefaults()
-	return opts
-}
-
-func (o *Options) applyDefaults() {
-	if o.SRIAlgorithm == "" {
-		o.SRIAlgorithm = sri.SHA256
-	}
-	if o.NodeAttributes == nil {
-		o.NodeAttributes = defaultNodeAttributes
-	}
-	if strings.HasSuffix(o.StripPrefix, "/") {
-		o.StripPrefix = o.StripPrefix[:len(o.StripPrefix)-1]
-	}
-}
-
 type Source struct {
 	wg             sync.WaitGroup
 	inner          iofs.FS
@@ -47,25 +22,6 @@ type Source struct {
 	stripPrefix    string
 	nodes          chan next
 	stop           chan struct{}
-}
-
-func NewSource(inner iofs.FS, opts Options) (api.Source, closeWaitFunc) {
-	opts.applyDefaults()
-	source := &Source{
-		inner:          inner,
-		casStore:       NewCASStore(),
-		sriAlgorithm:   opts.SRIAlgorithm,
-		nodeAttributes: opts.NodeAttributes,
-		stripPrefix:    opts.StripPrefix,
-		nodes:          make(chan next),
-		stop:           make(chan struct{}, 1),
-	}
-	source.wg.Add(1)
-	go source.walk()
-	return source, func() {
-		source.stop <- struct{}{}
-		source.wg.Wait()
-	}
 }
 
 func (s *Source) Next() (api.SourceNode, error) {
@@ -80,7 +36,7 @@ func (s *Source) Next() (api.SourceNode, error) {
 func (s *Source) Open(sri string) (io.ReadCloser, error) {
 	path, ok := s.casStore.Get(sri)
 	if !ok {
-		return nil, fs.ErrNotExist
+		return nil, iofs.ErrNotExist
 	}
 	return s.inner.Open(path)
 }

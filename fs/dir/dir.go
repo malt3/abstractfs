@@ -1,17 +1,34 @@
 package dir
 
-import "github.com/malt3/abstractfs-core/api"
+import (
+	"github.com/malt3/abstractfs-core/api"
+	"github.com/malt3/abstractfs-core/provider"
+)
 
-// FS is a os fs wrapper that is can return a api.Source.
-type FS struct {
-	// dir is the directory to walk.
-	dir string
+type Provider struct{}
+
+func (p Provider) Name() string {
+	return "dir"
 }
 
-func New(dir string) *FS {
-	return &FS{dir: dir}
+func (p Provider) SourceBuilder() provider.SourceBuilder {
+	return &SourceBuilder{}
 }
 
-func (f *FS) Source(opts Options) (api.Source, closeWaitFunc) {
-	return NewSource(f.dir, opts)
+func (p Provider) SinkBuilder() provider.SinkBuilder {
+	return &provider.UnsupportedSinkBuilder{}
 }
+
+func (p Provider) CAS() (api.CAS, api.CloseWaitFunc, error) {
+	return nil, nil, provider.ErrUnsupported
+}
+
+func (p Provider) CASReader() (api.CASReader, api.CloseWaitFunc, error) {
+	return nil, nil, provider.ErrUnsupported
+}
+
+func (p Provider) CASWriter() (api.CASWriter, api.CloseWaitFunc, error) {
+	return nil, nil, provider.ErrUnsupported
+}
+
+var _ provider.Provider = (*Provider)(nil)
