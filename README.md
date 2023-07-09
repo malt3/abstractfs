@@ -11,6 +11,7 @@
 go install github.com/malt3/abstractfs@latest
 abstractfs json --source-type tar --source /path/to/archive.tar | yq -P
 abstractfs json --source-type dir --source /path/to/directory | yq -P
+abstractfs convert --source-type dir --source /path/to/directory --sink-type tar --sink /path/to/archive.tar
 ```
 
 ## Architecture
