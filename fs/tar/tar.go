@@ -11,7 +11,7 @@ import (
 type Provider struct{}
 
 func (p Provider) Name() string {
-	return "dir"
+	return "tar"
 }
 
 func (p Provider) SourceBuilder() provider.SourceBuilder {

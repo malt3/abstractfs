@@ -2,6 +2,7 @@ package tar
 
 import (
 	"io"
+	"io/fs"
 	"strconv"
 	"strings"
 
@@ -12,16 +13,10 @@ import (
 )
 
 type Source struct {
+	casStore
 	reader           Reader
 	sriAlgorithm     sri.Algorithm
 	xattrPaxPrefixes []string
-	// idea: implement a tar CAS backend by storing the file offsets in a map
-	// use something like tell to get the offset while streaming the tar
-	// then if a CAS object is requested, use ReaderAt (if possible) to read the file
-	// by returning a SectionReader.
-	// alternatively, seek to the offset and read the file if ReaderAt is not available.
-	// The second option is must be guarded by a mutex since multiple goroutines might
-	// request CAS objects at the same time and seek around.
 }
 
 func (s *Source) Next() (api.SourceNode, error) {
@@ -57,7 +52,7 @@ func (s *Source) prepareNext(header *archivetar.Header) (api.SourceNode, error) 
 			Payload:    payload,
 			Size:       header.Size,
 		},
-		// TODO: maybe support Open()
+		Open: s.openFunc(kind, payload),
 	}
 
 	return node, nil
@@ -72,13 +67,11 @@ func (s *Source) payload(header *archivetar.Header, kind string) (string, error)
 	default:
 		return "", nil
 	}
-	// TODO: if possible, record the file offset before reading the file
-	// and save it in the CAS store
-	integrity, err := sri.FromReader(s.sriAlgorithm, s.reader)
+	integrity, err := s.Record(s.reader, header.Size, s.sriAlgorithm)
 	if err != nil {
 		return "", err
 	}
-	return integrity.String(), nil
+	return integrity, nil
 }
 
 func (s *Source) nodeAttributes(header *archivetar.Header) api.NodeAttributes {
@@ -112,7 +105,18 @@ func (s *Source) nodeAttributes(header *archivetar.Header) api.NodeAttributes {
 		Mode:      mode,
 		XAttrs:    xattrs,
 	}
+}
 
+func (s *Source) openFunc(kind, payload string) func() (io.ReadCloser, error) {
+	if kind != api.KindRegular {
+		// TODO: check if this should return a valid dir entry instead
+		return func() (io.ReadCloser, error) {
+			return nil, fs.ErrNotExist
+		}
+	}
+	return func() (io.ReadCloser, error) {
+		return s.casStore.Open(payload)
+	}
 }
 
 func newDefaultReader(r io.Reader) Reader {
@@ -131,3 +135,8 @@ func kindFromTarType(tarType byte) string {
 	}
 	return ""
 }
+
+var (
+	_ api.Source    = (*Source)(nil)
+	_ api.CASReader = (*Source)(nil)
+)
