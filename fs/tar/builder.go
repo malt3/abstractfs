@@ -95,6 +95,7 @@ func (b *SourceBuilder) Build() (api.Source, api.CloseWaitFunc, error) {
 	}
 	source := &Source{
 		reader:           b.NewReader(b.IOReader),
+		casStore:         NewCAS(b.IOReader),
 		sriAlgorithm:     b.SRIAlgorithm,
 		xattrPaxPrefixes: b.XAttrPaxPrefixes,
 	}

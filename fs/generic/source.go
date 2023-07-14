@@ -188,3 +188,6 @@ type lstatFS interface {
 	iofs.FS
 	Lstat(name string) (iofs.FileInfo, error)
 }
+
+var _ api.Source = (*Source)(nil)
+var _ api.CASReader = (*Source)(nil)

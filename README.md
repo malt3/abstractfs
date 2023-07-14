@@ -52,12 +52,12 @@ flowchart LR
 	- in-memory sources and sinks
     - user-extensible, programmable via an interface
 - Efficient in-memory representation
-- Clean interfaces for sources and sinks
+- Clean interfaces for [sources](https://pkg.go.dev/github.com/malt3/abstractfs-core/api#Source) and [sinks](https://pkg.go.dev/github.com/malt3/abstractfs-core/api#Sink)
 - Human readable metadata representation
 - File contents stored in abstract CAS and can come from anywhere (even other computers)
   - represent hash using [Subresource Integrity Format](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity)
 - Composable (support overlaying / nesting / merging operations)
-- Support reproducible / replayable operations / transformations as event stream
+- Support reproducible / repeatable operations / transformations as event stream
 	- add / remove a file
 	- replace contents or metadata
 	- serializable event format
@@ -71,10 +71,10 @@ flowchart LR
 ## Supported sources and sinks
 
 |          | Source | Sink | xattr | CAS Source |
-|----------|--------|------|-------|------------|
+| -------- | ------ | ---- | ----- | ---------- |
 | dir      | ✅     | 🔜   | 🔜    | ✅         |
 | go fs.FS | ✅     | ❌   | 🔜    | ✅         |
-| tar      | ✅     | ✅   | ✅    | 🔜         |
+| tar      | ✅     | ✅   | ✅    | ✅         |
 | cpio     | 🔜     | 🔜   | 🤷    | 🤷         |
 | zip      | 🔜     | 🔜   | 🤷    | 🤷         |
 | rpm      | 🔜     | 🔜   | 🤷    | 🤷         |

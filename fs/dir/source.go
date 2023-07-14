@@ -175,6 +175,9 @@ func normalizePath(path, dir string, keepPrefix bool) string {
 	if path == "." {
 		return "/"
 	}
+	if !strings.HasSuffix(dir, "/") {
+		dir += "/"
+	}
 	if !keepPrefix && strings.HasPrefix(path, dir) {
 		path = path[len(dir):]
 	}
@@ -189,9 +192,17 @@ func normalizeSymlinkTarget(target, dir string, keepPrefix bool) string {
 	if !strings.HasPrefix(target, "/") {
 		return target
 	}
+	if !strings.HasSuffix(dir, "/") {
+		dir += "/"
+	}
 	// strip prefix from absolute paths
 	if !keepPrefix && strings.HasPrefix(target, dir) {
 		return target[len(dir):]
 	}
 	return target
 }
+
+var (
+	_ api.Source    = (*Source)(nil)
+	_ api.CASReader = (*Source)(nil)
+)

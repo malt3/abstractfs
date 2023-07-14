@@ -21,6 +21,12 @@ type Sink struct {
 
 func (s *Sink) Consume(in fs.FS) error {
 	return fs.WalkDir(in, ".", func(path string, d fs.DirEntry, err error) error {
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
 		isRoot := path == "." || path == "/"
 		if isRoot && s.root == "" {
 			// skip root
