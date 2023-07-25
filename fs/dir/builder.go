@@ -19,6 +19,7 @@ type SourceBuilder struct {
 	// For example, if the node has the real path /foo/bar and the dir is /foo,
 	// the node path will be /foo/bar if KeepPrefix is set and /bar if not.
 	KeepPrefix     bool
+	PreserveXAttrs bool
 	invalidOptions []string
 }
 
@@ -60,6 +61,28 @@ func (b *SourceBuilder) Set(key string, value any) provider.SourceBuilder {
 		default:
 			b.invalidOptions = append(b.invalidOptions, key)
 		}
+	case "preserve-xattrs":
+		if preserveXAttrs, ok := value.(bool); ok {
+			b.PreserveXAttrs = preserveXAttrs
+			return b
+		}
+		preserveXAttrs, ok := value.(string)
+		if !ok {
+			b.invalidOptions = append(b.invalidOptions, key)
+			return b
+		}
+		switch strings.ToLower(preserveXAttrs) {
+		case "true":
+			b.PreserveXAttrs = true
+		case "1":
+			b.PreserveXAttrs = true
+		case "false":
+			b.PreserveXAttrs = false
+		case "0":
+			b.PreserveXAttrs = false
+		default:
+			b.invalidOptions = append(b.invalidOptions, key)
+		}
 	default:
 		b.invalidOptions = append(b.invalidOptions, key)
 	}
@@ -76,6 +99,11 @@ func (b *SourceBuilder) WithKeepPrefix(keepPrefix bool) *SourceBuilder {
 	return b
 }
 
+func (b *SourceBuilder) WithPreserveXAttrs(preserveXAttrs bool) *SourceBuilder {
+	b.PreserveXAttrs = preserveXAttrs
+	return b
+}
+
 // Build builds the options.
 func (b *SourceBuilder) Build() (api.Source, api.CloseWaitFunc, error) {
 	b.applyDefaults()
@@ -87,12 +115,13 @@ func (b *SourceBuilder) Build() (api.Source, api.CloseWaitFunc, error) {
 		return nil, nil, err
 	}
 	source := &Source{
-		dir:          dir,
-		casStore:     generic.NewCASStore(),
-		sriAlgorithm: b.SRIAlgorithm,
-		keepPrefix:   b.KeepPrefix,
-		nodes:        make(chan next),
-		stop:         make(chan struct{}, 1),
+		dir:            dir,
+		casStore:       generic.NewCASStore(),
+		sriAlgorithm:   b.SRIAlgorithm,
+		keepPrefix:     b.KeepPrefix,
+		preserveXAttrs: b.PreserveXAttrs,
+		nodes:          make(chan next),
+		stop:           make(chan struct{}, 1),
 	}
 	source.wg.Add(1)
 	go source.walk()

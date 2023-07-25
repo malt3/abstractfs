@@ -15,13 +15,14 @@ import (
 )
 
 type Source struct {
-	wg           sync.WaitGroup
-	dir          string
-	casStore     *generic.CASStore
-	sriAlgorithm sri.Algorithm
-	keepPrefix   bool
-	nodes        chan next
-	stop         chan struct{}
+	wg             sync.WaitGroup
+	dir            string
+	casStore       *generic.CASStore
+	sriAlgorithm   sri.Algorithm
+	keepPrefix     bool
+	preserveXAttrs bool
+	nodes          chan next
+	stop           chan struct{}
 }
 
 func (s *Source) Next() (api.SourceNode, error) {
@@ -136,7 +137,6 @@ func (s *Source) payload(path, kind string) (string, error) {
 }
 
 func (s *Source) nodeAttributes(path string, stat fs.FileInfo) (api.NodeAttributes, error) {
-	// important: also implement OS specific xattrs (at least linux)
 	mtime := stat.ModTime().UTC()
 	userID := userID(stat)
 	groupID := groupID(stat)
@@ -149,7 +149,13 @@ func (s *Source) nodeAttributes(path string, stat fs.FileInfo) (api.NodeAttribut
 		return api.NodeAttributes{}, err
 	}
 	mode := "0o" + strconv.FormatInt(int64(stat.Mode().Perm()), 8)
-	// TODO: implement xattrs
+	var xattrs map[string]string
+	if s.preserveXAttrs {
+		xattrs, err = xattrMap(path)
+		if err != nil {
+			return api.NodeAttributes{}, err
+		}
+	}
 	return api.NodeAttributes{
 		Mtime:     mtime,
 		UserID:    userID,
@@ -157,6 +163,7 @@ func (s *Source) nodeAttributes(path string, stat fs.FileInfo) (api.NodeAttribut
 		UserName:  userName,
 		GroupName: groupName,
 		Mode:      mode,
+		XAttrs:    xattrs,
 	}, nil
 }
 
@@ -174,9 +181,6 @@ type closeWaitFunc func()
 func normalizePath(path, dir string, keepPrefix bool) string {
 	if path == "." {
 		return "/"
-	}
-	if !strings.HasSuffix(dir, "/") {
-		dir += "/"
 	}
 	if !keepPrefix && strings.HasPrefix(path, dir) {
 		path = path[len(dir):]
@@ -200,6 +204,30 @@ func normalizeSymlinkTarget(target, dir string, keepPrefix bool) string {
 		return target[len(dir):]
 	}
 	return target
+}
+
+func xattrMap(path string) (map[string]string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	attributes, err := Flistxattr(file)
+	if err != nil {
+		return nil, err
+	}
+	if len(attributes) == 0 {
+		return nil, nil
+	}
+	out := make(map[string]string, len(attributes))
+	for _, attr := range attributes {
+		value, err := Fgetxattr(file, attr)
+		if err != nil {
+			return nil, err
+		}
+		out[attr] = string(value)
+	}
+	return out, nil
 }
 
 var (
