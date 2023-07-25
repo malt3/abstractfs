@@ -92,3 +92,7 @@ flowchart LR
 ## 🚧 JSON Format
 
 The current format is not stabilized and still work in progress.
+
+## Core
+
+The [core](https://github.com/malt3/abstractfs-core) is implemented in a separate module and has no dependencies.
