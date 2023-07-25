@@ -11,9 +11,9 @@ import (
 )
 
 type SourceBuilder struct {
-	SRIAlgorithm   sri.Algorithm
+	SRIAlgorithm   sri.Algorithm `abstractfs:"cas-algorithm"`
 	NodeAttributes func(iofs.FileInfo) api.NodeAttributes
-	StripPrefix    string
+	StripPrefix    string `abstractfs:"strip-prefix"`
 	FS             iofs.FS
 	invalidOptions []string
 }
@@ -22,29 +22,6 @@ type SourceBuilder struct {
 // The generic provider does not support source references.
 // It always needs a io.FS.
 func (b *SourceBuilder) WithSourceRef(_ string) provider.SourceBuilder {
-	return b
-}
-
-// Set sets a option.
-func (b *SourceBuilder) Set(key string, value any) provider.SourceBuilder {
-	switch key {
-	case provider.OptionCASAlgorithm:
-		algorithm, ok := value.(sri.Algorithm)
-		if !ok {
-			b.invalidOptions = append(b.invalidOptions, key)
-			return b
-		}
-		b.SRIAlgorithm = algorithm
-	case "strip-prefix":
-		stripPrefix, ok := value.(string)
-		if !ok {
-			b.invalidOptions = append(b.invalidOptions, key)
-			return b
-		}
-		b.StripPrefix = stripPrefix
-	default:
-		b.invalidOptions = append(b.invalidOptions, key)
-	}
 	return b
 }
 

@@ -14,11 +14,11 @@ import (
 )
 
 type SourceBuilder struct {
-	SRIAlgorithm sri.Algorithm
+	SRIAlgorithm sri.Algorithm `abstractfs:"cas-algorithm"`
 	NewReader    func(io.Reader) Reader
 	// XAttrPaxPrefixes is a list of prefixes that are used to identify xattrs
 	// later prefixes override earlier ones if the same xattr is set multiple times.
-	XAttrPaxPrefixes []string
+	XAttrPaxPrefixes []string `abstractfs:"xattr-prefixes"`
 	Path             string
 	IOReader         io.Reader
 	invalidOptions   []string
@@ -28,29 +28,6 @@ type SourceBuilder struct {
 // For the tar provider, the source reference is the path to the tar file.
 func (b *SourceBuilder) WithSourceRef(ref string) provider.SourceBuilder {
 	b.Path = ref
-	return b
-}
-
-// Set sets a option.
-func (b *SourceBuilder) Set(key string, value any) provider.SourceBuilder {
-	switch key {
-	case provider.OptionCASAlgorithm:
-		algorithm, ok := value.(sri.Algorithm)
-		if !ok {
-			b.invalidOptions = append(b.invalidOptions, key)
-			return b
-		}
-		b.SRIAlgorithm = algorithm
-	case "xattr-prefixes":
-		xattrPrefixes, ok := value.([]string)
-		if !ok {
-			b.invalidOptions = append(b.invalidOptions, key)
-			return b
-		}
-		b.XAttrPaxPrefixes = xattrPrefixes
-	default:
-		b.invalidOptions = append(b.invalidOptions, key)
-	}
 	return b
 }
 
@@ -141,13 +118,13 @@ type SinkBuilder struct {
 	// Valid values are FormatPAX, FormatGNU, FormatUSTAR.
 	// By default, FormatPAX is used.
 	// Other formats are not able to store all metadata and are thus lossy.
-	Format archivetar.Format
+	Format archivetar.Format `abstractfs:"tar-format"`
 	// Root is the root directory of the tar archive.
 	// Common values are "" (skip over root directory), "/" or "." (write a root directory).
-	Root string
+	Root string `abstractfs:"root"`
 	// XattrPaxPrefix is the prefix to use for xattrs.
 	// By default, the "SHILY.xattr." prefix is used.
-	XAttrPaxPrefix string
+	XAttrPaxPrefix string `abstractfs:"xattr-prefix"`
 	// Path is the path to write the tar to.
 	// If Path is set, the tar is written to the file.
 	// Otherwise, the tar is written to the io.Writer.

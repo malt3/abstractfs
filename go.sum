@@ -1,8 +1,8 @@
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
-github.com/malt3/abstractfs-core v0.0.1-rc2 h1:PdX09QYjbORAkQg7Qe/QZ2IDlktQ3qi+EVkVLyGa934=
-github.com/malt3/abstractfs-core v0.0.1-rc2/go.mod h1:GQ3mhVCIxoMK8a18C8XUHciUlUVsriNXVq44IVb8WX4=
+github.com/malt3/abstractfs-core v0.0.1-rc3 h1:xH1g9QbldbAHXq7DrAZpDaWmRWR8WULP9KKh4TNVic8=
+github.com/malt3/abstractfs-core v0.0.1-rc3/go.mod h1:GQ3mhVCIxoMK8a18C8XUHciUlUVsriNXVq44IVb8WX4=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/spf13/cobra v1.7.0 h1:hyqWnYt1ZQShIddO5kBpj3vu05/++x6tJ6dg8EC572I=
 github.com/spf13/cobra v1.7.0/go.mod h1:uLxZILRyS/50WlhOIKD7W6V5bgeIt+4sICxh6uRMrb0=

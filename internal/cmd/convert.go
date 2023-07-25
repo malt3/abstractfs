@@ -23,8 +23,10 @@ func NewConvertCmd() *cobra.Command {
 
 	cmd.Flags().String("source", "", "Path or reference to the source.")
 	cmd.Flags().String("source-type", "", "Type of the source.")
+	cmd.Flags().StringToString("source-option", nil, "Optional provider specific source options.")
 	cmd.Flags().String("sink", "", "Path or reference to the sink.")
 	cmd.Flags().String("sink-type", "", "Type of the sink.")
+	cmd.Flags().StringToString("sink-option", nil, "Optional provider specific sink options.")
 	cmd.Flags().Bool("verbose", false, "Enable verbose output")
 	must(cmd.MarkFlagRequired("source"))
 	must(cmd.MarkFlagRequired("source-type"))
@@ -40,7 +42,7 @@ func runConvert(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	source, closeSource, err := getSource(flags.Source, flags.SourceType)
+	source, closeSource, err := getSource(flags.Source, flags.SourceType, flags.SourceOpts)
 	if err != nil {
 		return err
 	}
@@ -58,7 +60,7 @@ func runConvert(cmd *cobra.Command, args []string) error {
 
 	treeFS := &coretree.TreeFS{Tree: tree, CASReader: casReader}
 
-	sink, closeSink, err := getSink(flags.Sink, flags.SinkType)
+	sink, closeSink, err := getSink(flags.Sink, flags.SinkType, flags.SinkOpts)
 	if err != nil {
 		return err
 	}
@@ -69,8 +71,10 @@ func runConvert(cmd *cobra.Command, args []string) error {
 type convertFlags struct {
 	Source     string
 	SourceType string
+	SourceOpts map[string]string
 	Sink       string
 	SinkType   string
+	SinkOpts   map[string]string
 	Verbose    bool
 }
 
@@ -83,11 +87,19 @@ func parseConvertFlags(cmd *cobra.Command) (convertFlags, error) {
 	if err != nil {
 		return convertFlags{}, err
 	}
+	sourceOptions, err := cmd.Flags().GetStringToString("source-option")
+	if err != nil {
+		return convertFlags{}, err
+	}
 	sink, err := cmd.Flags().GetString("sink")
 	if err != nil {
 		return convertFlags{}, err
 	}
 	sinkType, err := cmd.Flags().GetString("sink-type")
+	if err != nil {
+		return convertFlags{}, err
+	}
+	sinkOptions, err := cmd.Flags().GetStringToString("sink-option")
 	if err != nil {
 		return convertFlags{}, err
 	}
@@ -99,8 +111,10 @@ func parseConvertFlags(cmd *cobra.Command) (convertFlags, error) {
 	return convertFlags{
 		Source:     source,
 		SourceType: sourceType,
+		SourceOpts: sourceOptions,
 		Sink:       sink,
 		SinkType:   sinkType,
+		SinkOpts:   sinkOptions,
 		Verbose:    verbose,
 	}, nil
 }

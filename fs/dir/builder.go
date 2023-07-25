@@ -12,80 +12,20 @@ import (
 
 type SourceBuilder struct {
 	Dir          string
-	SRIAlgorithm sri.Algorithm
+	SRIAlgorithm sri.Algorithm `abstractfs:"cas-algorithm"`
 	// KeepPrefix will keep the prefix of the dir.
 	// If set, the dir path prefix will be removed from the node path.
 	// If not set, the node path will be the real path of the node.
 	// For example, if the node has the real path /foo/bar and the dir is /foo,
 	// the node path will be /foo/bar if KeepPrefix is set and /bar if not.
-	KeepPrefix     bool
-	PreserveXAttrs bool
+	KeepPrefix     bool `abstractfs:"keep-prefix"`
+	PreserveXAttrs bool `abstractfs:"preserve-xattrs"`
 	invalidOptions []string
 }
 
 // WithSourceRef sets the source reference.
 func (b *SourceBuilder) WithSourceRef(ref string) provider.SourceBuilder {
 	b.Dir = ref
-	return b
-}
-
-// Set sets a option.
-func (b *SourceBuilder) Set(key string, value any) provider.SourceBuilder {
-	switch key {
-	case provider.OptionCASAlgorithm:
-		algorithm, ok := value.(sri.Algorithm)
-		if !ok {
-			b.invalidOptions = append(b.invalidOptions, key)
-			return b
-		}
-		b.SRIAlgorithm = algorithm
-	case "keep-prefix":
-		if stripPrefix, ok := value.(bool); ok {
-			b.KeepPrefix = stripPrefix
-			return b
-		}
-		stripPrefix, ok := value.(string)
-		if !ok {
-			b.invalidOptions = append(b.invalidOptions, key)
-			return b
-		}
-		switch strings.ToLower(stripPrefix) {
-		case "true":
-			b.KeepPrefix = true
-		case "1":
-			b.KeepPrefix = true
-		case "false":
-			b.KeepPrefix = false
-		case "0":
-			b.KeepPrefix = false
-		default:
-			b.invalidOptions = append(b.invalidOptions, key)
-		}
-	case "preserve-xattrs":
-		if preserveXAttrs, ok := value.(bool); ok {
-			b.PreserveXAttrs = preserveXAttrs
-			return b
-		}
-		preserveXAttrs, ok := value.(string)
-		if !ok {
-			b.invalidOptions = append(b.invalidOptions, key)
-			return b
-		}
-		switch strings.ToLower(preserveXAttrs) {
-		case "true":
-			b.PreserveXAttrs = true
-		case "1":
-			b.PreserveXAttrs = true
-		case "false":
-			b.PreserveXAttrs = false
-		case "0":
-			b.PreserveXAttrs = false
-		default:
-			b.invalidOptions = append(b.invalidOptions, key)
-		}
-	default:
-		b.invalidOptions = append(b.invalidOptions, key)
-	}
 	return b
 }
 

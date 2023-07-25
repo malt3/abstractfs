@@ -3,7 +3,7 @@ module github.com/malt3/abstractfs
 go 1.20
 
 require (
-	github.com/malt3/abstractfs-core v0.0.1-rc2
+	github.com/malt3/abstractfs-core v0.0.1-rc3
 	github.com/spf13/cobra v1.7.0
 )
 

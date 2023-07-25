@@ -24,6 +24,7 @@ func NewJSONCmd() *cobra.Command {
 	cmd.Flags().String("source", "", "Path or reference to the source.")
 	cmd.Flags().String("source-type", "", "Type of the source.")
 	cmd.Flags().String("out", "", "Optional path to write the upload result to. If not set, the result is written to stdout.")
+	cmd.Flags().StringToString("source-option", nil, "Optional provider specific options.")
 	cmd.Flags().Bool("verbose", false, "Enable verbose output")
 	must(cmd.MarkFlagRequired("source"))
 	must(cmd.MarkFlagRequired("source-type"))
@@ -37,7 +38,7 @@ func runJSON(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	source, closeSource, err := getSource(flags.Source, flags.SourceType)
+	source, closeSource, err := getSource(flags.Source, flags.SourceType, flags.SourceOpts)
 	if err != nil {
 		return err
 	}
@@ -65,6 +66,7 @@ func runJSON(cmd *cobra.Command, args []string) error {
 type jsonFlags struct {
 	Source     string
 	SourceType string
+	SourceOpts map[string]string
 	Out        string
 	Verbose    bool
 }
@@ -82,6 +84,10 @@ func parseJSONFlags(cmd *cobra.Command) (jsonFlags, error) {
 	if err != nil {
 		return jsonFlags{}, err
 	}
+	sourceOptions, err := cmd.Flags().GetStringToString("source-option")
+	if err != nil {
+		return jsonFlags{}, err
+	}
 
 	verbose, err := cmd.Flags().GetBool("verbose")
 	if err != nil {
@@ -91,6 +97,7 @@ func parseJSONFlags(cmd *cobra.Command) (jsonFlags, error) {
 	return jsonFlags{
 		Source:     source,
 		SourceType: sourceType,
+		SourceOpts: sourceOptions,
 		Out:        out,
 		Verbose:    verbose,
 	}, nil
