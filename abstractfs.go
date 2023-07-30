@@ -35,6 +35,7 @@ func newRootCmd() *cobra.Command {
 
 	rootCmd.AddCommand(cmd.NewJSONCmd())
 	rootCmd.AddCommand(cmd.NewConvertCmd())
+	rootCmd.AddCommand(cmd.NewCASCmd())
 	return rootCmd
 }
 

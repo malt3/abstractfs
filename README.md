@@ -56,6 +56,7 @@ flowchart LR
 - Human readable metadata representation
 - File contents stored in abstract CAS and can come from anywhere (even other computers)
   - represent hash using [Subresource Integrity Format](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity)
+  - File tree operates on nodes containing only file metadata and SRI. Contents handled out-of-band.
 - Composable (support overlaying / nesting / merging operations)
 - Support reproducible / repeatable operations / transformations as event stream
 	- add / remove a file
@@ -85,7 +86,7 @@ flowchart LR
 
 ## Content addressable storage (CAS) backends
 
-- [ ] in-memory
+- [x] in-memory
 - [ ] dir
 - [ ] S3 / object storage
 

@@ -39,3 +39,15 @@ func getSink(sinkRef, sinkType string, opts map[string]string) (api.Sink, api.Cl
 	}
 	return sink, closer, nil
 }
+
+func getCASBackend(backendType string, opts map[string]string) (api.CAS, api.CloseWaitFunc, error) {
+	provider, ok := providers.CAS[backendType]
+	if !ok {
+		return nil, nil, fmt.Errorf("unknown backend type %q", backendType)
+	}
+	cas, closer, err := provider.CAS()
+	if err != nil {
+		return nil, nil, fmt.Errorf("building backend: %w", err)
+	}
+	return cas, closer, nil
+}
